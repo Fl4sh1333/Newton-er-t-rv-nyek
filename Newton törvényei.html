@@ -1,0 +1,984 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Newton törvényei</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400..600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: laboratóriumi jegyzetfüzet. Bal oldalon a törvény szövege, jobb oldalon a hozzá tartozó élő kísérlet.
+   Szín = szerep: kék a sebesség, narancs az erő, zöldeskék az ellenerő. */
+:root {
+  --bg: #F1F3F9;
+  --surface: #FFFFFF;
+  --canvas: #F8F9FD;
+  --soft: #E4E9FB;
+  --ink: #0E1633;
+  --muted: #586082;
+  --line: #D6DBEA;
+  --numeral: #CBD3F6;
+  --accent: #2747F0;
+  --accent-ink: #FFFFFF;
+  --force: #C2490A;
+  --react: #08796B;
+  --bar: rgba(241, 243, 249, 0.88);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A0F24;
+    --surface: #111836;
+    --canvas: #0D1330;
+    --soft: #1A2350;
+    --ink: #E8ECFB;
+    --muted: #98A1C6;
+    --line: #212A52;
+    --numeral: #222C60;
+    --accent: #7F95FF;
+    --accent-ink: #0A0F24;
+    --force: #FF9457;
+    --react: #3FD3BF;
+    --bar: rgba(10, 15, 36, 0.88);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0A0F24;
+  --surface: #111836;
+  --canvas: #0D1330;
+  --soft: #1A2350;
+  --ink: #E8ECFB;
+  --muted: #98A1C6;
+  --line: #212A52;
+  --numeral: #222C60;
+  --accent: #7F95FF;
+  --accent-ink: #0A0F24;
+  --force: #FF9457;
+  --react: #3FD3BF;
+  --bar: rgba(10, 15, 36, 0.88);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.65 var(--f-body);
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 30;
+  background: var(--bg);
+}
+.wrap {
+  width: 100%;
+  max-width: 1160px;
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3, p, ul, ol, figure, blockquote { margin: 0; }
+h1, h2 { font-family: var(--f-display); text-wrap: balance; letter-spacing: -0.025em; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+/* ---------- felső sáv ---------- */
+.bar {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  background: var(--bar);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.bar-in { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; }
+.brand { font: 700 1.05rem var(--f-display); letter-spacing: -0.01em; text-decoration: none; white-space: nowrap; }
+.brand small { font: 400 0.75rem var(--f-mono); color: var(--muted); margin-left: 8px; letter-spacing: 0; }
+.links { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.links::-webkit-scrollbar { display: none; }
+.links a {
+  font: 500 0.85rem var(--f-body);
+  text-decoration: none;
+  color: var(--muted);
+  padding: 8px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+.links a:hover { color: var(--ink); }
+.links a[aria-current="true"] { background: var(--soft); color: var(--ink); }
+
+/* ---------- hero ---------- */
+.hero { padding-block: clamp(32px, 6vw, 72px) clamp(36px, 6vw, 72px); }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: clamp(24px, 5vw, 64px); align-items: center; }
+.eyebrow { font: 500 0.75rem var(--f-mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: clamp(2.7rem, 7.4vw, 5.4rem); font-weight: 750; line-height: 0.98; letter-spacing: -0.035em; margin-top: 16px; }
+h1 em { font-style: normal; color: var(--accent); }
+.lead { font-size: clamp(1.1rem, 2vw, 1.28rem); line-height: 1.6; color: var(--muted); max-width: 54ch; margin-top: 22px; }
+.chips { list-style: none; padding: 0; margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+.chips a {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
+  align-items: baseline;
+  text-decoration: none;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  transition: transform 0.2s, border-color 0.2s;
+}
+.chips a:hover { transform: translateY(-2px); border-color: var(--accent); }
+.chips .rn { font: 800 1.1rem var(--f-display); color: var(--accent); }
+.chips .nm { font-weight: 600; font-size: 0.95rem; }
+.chips code { grid-column: 2; font: 400 0.78rem var(--f-mono); color: var(--muted); }
+.cradle { background: var(--soft); border-radius: 28px; padding: 8px 8px 14px; }
+.cradle canvas { display: block; width: 100%; height: 300px; }
+.cradle figcaption { font: 400 0.78rem/1.5 var(--f-mono); color: var(--muted); padding: 0 14px; }
+
+/* ---------- törvények ---------- */
+.law { padding-block: clamp(48px, 8vw, 96px); border-top: 1px solid var(--line); }
+.law-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 5vw, 64px); align-items: start; }
+.law-text { min-width: 0; }
+@media (min-width: 900px) { .law-text { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); } }
+.numeral { font: 800 clamp(4.5rem, 11vw, 7.5rem)/0.8 var(--f-display); letter-spacing: -0.04em; color: var(--numeral); user-select: none; }
+.law h2 { font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 700; line-height: 1.05; margin-top: 14px; }
+.statement { font: 500 clamp(1.15rem, 2vw, 1.4rem)/1.4 var(--f-display); letter-spacing: -0.01em; margin-top: 20px; text-wrap: pretty; }
+.statement em { font-style: normal; color: var(--accent); }
+.formula { display: inline-block; font: 500 clamp(1.2rem, 2.6vw, 1.6rem) var(--f-mono); background: var(--soft); padding: 0.3em 0.7em; border-radius: 10px; margin-top: 20px; }
+.unit { font: 400 0.8rem var(--f-mono); color: var(--muted); margin-top: 8px; }
+.explain { margin-top: 20px; max-width: 58ch; }
+.ex { list-style: none; padding: 0; margin-top: 18px; display: grid; gap: 10px; max-width: 58ch; }
+.ex li { padding-left: 26px; position: relative; color: var(--muted); }
+.ex li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-family: var(--f-mono); }
+
+/* ---------- kísérlet ---------- */
+.lab { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; min-width: 0; }
+.lab-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.tag { font: 500 0.7rem var(--f-mono); letter-spacing: 0.12em; text-transform: uppercase; background: var(--accent); color: var(--accent-ink); padding: 3px 8px; border-radius: 6px; }
+.lab-title { font: 600 0.98rem var(--f-display); }
+.lab-how { padding: 12px 16px 14px; color: var(--muted); font-size: 0.95rem; }
+.lab canvas { display: block; width: 100%; background: var(--canvas); border-block: 1px solid var(--line); }
+#c1, #c3 { height: 250px; }
+#c2 { height: 210px; }
+#g2 { height: 180px; border-top: 0; }
+.cap { padding: 12px 16px 0; font-size: 0.92rem; min-height: 3.6em; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 8px 16px 0; font: 400 0.75rem var(--f-mono); color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 22px; height: 3px; border-radius: 2px; background: currentColor; position: relative; }
+.legend i::after { content: ""; position: absolute; right: -2px; top: -3px; border-left: 6px solid currentColor; border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; }
+.lg-v { color: var(--accent); }
+.lg-f { color: var(--force); }
+.lg-r { color: var(--react); }
+.lg-d { color: var(--muted); }
+.lg-d i { background: none; border-top: 2px dashed currentColor; height: 0; border-radius: 0; }
+.lg-d i::after { display: none; }
+.ctrls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 24px; padding: 16px; }
+.ctrl { min-width: 0; }
+.ctrl label { display: flex; justify-content: space-between; gap: 8px; font-weight: 500; font-size: 0.92rem; }
+.ctrl output { font-family: var(--f-mono); font-size: 0.85rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; height: 30px; margin: 4px 0 0; accent-color: var(--accent); }
+.btns { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 0 16px 16px; }
+.btn {
+  font: 600 0.95rem/1 var(--f-body);
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1.5px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.ghost:hover { border-color: var(--ink); }
+.chk { display: inline-flex; align-items: center; gap: 8px; font-size: 0.92rem; min-height: 44px; cursor: pointer; }
+.chk input { width: 18px; height: 18px; accent-color: var(--accent); }
+.read { display: flex; flex-wrap: wrap; border-top: 1px solid var(--line); }
+.tile { flex: 1 1 120px; padding: 12px 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 0; }
+.tile:last-child { border-right: 0; }
+.tile span { display: block; font: 500 0.68rem var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.tile b { display: block; font: 700 1.3rem/1.3 var(--f-display); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.tile b.sm { font-size: 1.05rem; line-height: 1.55; }
+.note { padding: 12px 16px 16px; font-size: 0.85rem; color: var(--muted); }
+
+/* ---------- összefoglaló és kvíz ---------- */
+.sec { padding-block: clamp(48px, 8vw, 88px); border-top: 1px solid var(--line); }
+.sec h2 { font-size: clamp(1.8rem, 4vw, 2.7rem); font-weight: 700; line-height: 1.05; }
+.sec .sub { color: var(--muted); margin-top: 12px; max-width: 58ch; }
+.tbl { overflow-x: auto; margin-top: 28px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 640px; }
+th { text-align: left; font: 500 0.7rem var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 14px 18px; border-bottom: 1px solid var(--line); }
+td { padding: 16px 18px; vertical-align: top; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+td.n { font: 800 1.5rem var(--f-display); color: var(--accent); width: 56px; }
+td.t { font: 600 1.02rem var(--f-display); white-space: nowrap; }
+td code { font: 500 0.95rem var(--f-mono); white-space: nowrap; }
+.quiz { margin-top: 28px; display: grid; gap: 0; max-width: 820px; }
+.q { padding: 20px 0; border-bottom: 1px solid var(--line); }
+.q:first-child { border-top: 1px solid var(--line); }
+.q p.qt { font-weight: 500; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.opt { font: 500 0.9rem var(--f-body); min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; transition: border-color 0.15s, transform 0.15s; }
+.opt:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
+.opt:disabled { cursor: default; }
+.opt.ok { border-color: var(--react); background: var(--soft); }
+.opt.ok::after { content: " ✓"; color: var(--react); font-weight: 700; }
+.opt.bad { border-color: var(--force); }
+.opt.bad::after { content: " ✕"; color: var(--force); font-weight: 700; }
+.fb { margin-top: 12px; color: var(--muted); font-size: 0.95rem; max-width: 62ch; }
+.score-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 22px; }
+.score { font: 500 0.95rem var(--f-mono); }
+footer { padding-block: 32px 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
+footer p { max-width: 70ch; }
+
+.js-rv .rv { transform: translateY(22px); transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.js-rv .rv.in { transform: none; }
+
+@media (max-width: 899px) {
+  .hero-grid, .law-grid { grid-template-columns: minmax(0, 1fr); }
+  .brand small { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+}
+</style>
+
+<header class="bar">
+  <div class="wrap bar-in">
+    <a class="brand" href="#top">Newton <small>Principia, 1687</small></a>
+    <nav class="links" aria-label="Szakaszok">
+      <a href="#elso">I. Tehetetlenség</a>
+      <a href="#masodik">II. F = m·a</a>
+      <a href="#harmadik">III. Hatás–ellenhatás</a>
+      <a href="#osszefoglalo">Összefoglaló</a>
+      <a href="#teszt">Kvíz</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Klasszikus mechanika</p>
+        <h1>Newton három <em>törvénye</em></h1>
+        <p class="lead">Isaac Newton 1687-ben, a Principia Mathematicában írta le, hogyan változtatja meg az erő a testek mozgását. Három mondatból áll az egész, mégis megmagyarázza a gördülő golyót, az induló autót és a felszálló rakétát. Mindhárom törvényhez itt egy kísérlet, amit te irányítasz.</p>
+        <ul class="chips">
+          <li><a href="#elso"><span class="rn">I</span><span class="nm">Tehetetlenség</span><code>ΣF = 0 → v = állandó</code></a></li>
+          <li><a href="#masodik"><span class="rn">II</span><span class="nm">Dinamika alaptörvénye</span><code>ΣF = m · a</code></a></li>
+          <li><a href="#harmadik"><span class="rn">III</span><span class="nm">Hatás–ellenhatás</span><code>F₁₂ = −F₂₁</code></a></li>
+        </ul>
+      </div>
+      <figure class="cradle">
+        <canvas id="cradle" role="img" aria-label="Animáció: Newton-bölcső. A bal szélső golyó kilendül, nekiütközik a többinek, a jobb szélső golyó lendül ki, majd visszafelé ugyanez."></canvas>
+        <figcaption>Newton-bölcső: a lendület a golyókon át adódik tovább, ezért ugyanannyi golyó lendül ki a túloldalon, ahány nekiütközött.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- I. -->
+  <section class="law" id="elso">
+    <div class="wrap law-grid">
+      <div class="law-text rv">
+        <p class="numeral" aria-hidden="true">I</p>
+        <h2>Tehetetlenség</h2>
+        <p class="statement">Minden test megtartja <em>nyugalmi állapotát</em> vagy egyenes vonalú, <em>egyenletes mozgását</em>, ha nem hat rá eredő erő.</p>
+        <p class="formula">ΣF = 0 → v = állandó</p>
+        <p class="explain">A mozgás fenntartásához nem kell erő. Erő csak a mozgás megváltoztatásához kell: a gyorsításhoz, a lassításhoz vagy az irányváltáshoz. A mindennapokban azért tűnik másképp, mert szinte mindig van súrlódás vagy közegellenállás. Galilei lejtőkön gördülő golyókkal jutott erre a gondolatra, Newton fogalmazta meg törvényként.</p>
+        <ul class="ex">
+          <li>Hirtelen fékező buszban az utasok előre dőlnek: a testük az eredeti sebességgel haladna tovább.</li>
+          <li>A terítőt gyorsan kirántva a poharak a helyükön maradnak.</li>
+          <li>Az űrben a hajtómű nélküli szonda évekig megtartja a sebességét.</li>
+        </ul>
+      </div>
+      <div class="lab rv" role="group" aria-label="Kísérlet: korong a jégpályán">
+        <div class="lab-head"><span class="tag">Kísérlet</span><span class="lab-title">Korong a jégpályán</span></div>
+        <p class="lab-how">Állítsd a súrlódást nullára, és lökd meg a korongot. Aztán kapcsold be a súrlódást, és nézd, mi változik. A pálya két vége összeér: ami jobbra kilép, balról érkezik vissza.</p>
+        <canvas id="c1" role="img" aria-label="Egy korong csúszik a pályán. Alatta pontok jelzik a helyét negyed másodpercenként."></canvas>
+        <p class="cap" id="cap1"></p>
+        <div class="legend"><span class="lg-v"><i></i>sebesség</span><span class="lg-f"><i></i>súrlódási erő</span></div>
+        <div class="ctrls">
+          <div class="ctrl">
+            <label for="mu1">Súrlódás <output id="mu1o" for="mu1">μ = 0,00</output></label>
+            <input type="range" id="mu1" min="0" max="30" step="1" value="0">
+          </div>
+        </div>
+        <div class="btns">
+          <button class="btn" id="pushR" type="button">Meglök →</button>
+          <button class="btn ghost" id="pushL" type="button">← Meglök</button>
+          <button class="btn ghost" id="grab" type="button">Megfog</button>
+        </div>
+        <div class="read">
+          <div class="tile"><span>Sebesség</span><b id="v1">0,0 m/s</b></div>
+          <div class="tile"><span>Lassulás μ·g</span><b id="a1">0,0 m/s²</b></div>
+          <div class="tile"><span>Mozgásállapot</span><b class="sm" id="s1">nyugalom</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- II. -->
+  <section class="law" id="masodik">
+    <div class="wrap law-grid">
+      <div class="law-text rv">
+        <p class="numeral" aria-hidden="true">II</p>
+        <h2>A dinamika alaptörvénye</h2>
+        <p class="statement">Egy test <em>gyorsulása</em> egyenesen arányos a rá ható eredő erővel, és fordítottan arányos a <em>tömegével</em>.</p>
+        <p class="formula">F = m · a</p>
+        <p class="unit">1 N = 1 kg · m/s². Egy newton nagyjából egy kis alma súlya a Földön.</p>
+        <p class="explain">Ugyanaz az erő a nehezebb testet kevésbé gyorsítja. Kétszeres tömeghez kétszeres erő kell, hogy a gyorsulás ugyanakkora maradjon. A gyorsulás az eredő erő irányába mutat. A tömeg itt a tehetetlenség mértéke: azt mutatja meg, mennyire áll ellen a test a sebességváltozásnak.</p>
+        <ul class="ex">
+          <li>Az üres bevásárlókocsi kis lökésre is elindul, a teli kocsihoz sokkal nagyobb erő kell.</li>
+          <li>Ugyanakkora vonóerővel a személyautó gyorsabban gyorsul, mint a megrakott teherautó.</li>
+          <li>Az 1 kg-os testet 1 N erő másodpercenként 1 m/s-mal gyorsítja.</li>
+        </ul>
+      </div>
+      <div class="lab rv" role="group" aria-label="Kísérlet: kocsi a sínen">
+        <div class="lab-head"><span class="tag">Kísérlet</span><span class="lab-title">Kocsi a sínen</span></div>
+        <p class="lab-how">Állítsd be az erőt és a tömeget, majd indítsd el. A sebesség–idő grafikon meredeksége a gyorsulás. Futás közben is átállíthatod a csúszkákat, a vonal azonnal megtörik.</p>
+        <canvas id="c2" role="img" aria-label="Egy kocsi gyorsul a sínen, mögötte nyíl jelzi a rá ható erőt."></canvas>
+        <canvas id="g2" role="img" aria-label="Sebesség–idő grafikon: a folytonos vonal a mért sebesség, a szaggatott a várható."></canvas>
+        <div class="legend"><span class="lg-f"><i></i>erő</span><span class="lg-v"><i></i>sebesség</span><span class="lg-d"><i></i>várható, ha F és m nem változik</span></div>
+        <div class="ctrls">
+          <div class="ctrl">
+            <label for="F2">Erő <output id="F2o" for="F2">8 N</output></label>
+            <input type="range" id="F2" min="0" max="20" step="1" value="8">
+          </div>
+          <div class="ctrl">
+            <label for="m2">Tömeg <output id="m2o" for="m2">4 kg</output></label>
+            <input type="range" id="m2" min="2" max="10" step="1" value="4">
+          </div>
+        </div>
+        <div class="btns">
+          <button class="btn" id="go2" type="button">Indít</button>
+          <button class="btn ghost" id="rs2" type="button">Visszaállít</button>
+        </div>
+        <div class="read">
+          <div class="tile"><span>Gyorsulás F ÷ m</span><b id="a2">2,0 m/s²</b></div>
+          <div class="tile"><span>Sebesség</span><b id="v2">0,0 m/s</b></div>
+          <div class="tile"><span>Megtett út</span><b id="x2">0,0 m</b></div>
+          <div class="tile"><span>Idő</span><b id="t2">0,0 s</b></div>
+        </div>
+        <p class="note">A sín sima, súrlódás és közegellenállás nincs. A kísérlet 8 másodperc után megáll.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- III. -->
+  <section class="law" id="harmadik">
+    <div class="wrap law-grid">
+      <div class="law-text rv">
+        <p class="numeral" aria-hidden="true">III</p>
+        <h2>Hatás és ellenhatás</h2>
+        <p class="statement">Ha az A test erőt fejt ki a B testre, akkor a B test <em>ugyanakkora nagyságú, ellentétes irányú</em> erőt fejt ki az A testre.</p>
+        <p class="formula">F<sub>AB</sub> = −F<sub>BA</sub></p>
+        <p class="explain">A két erő két különböző testen támad, ezért nem oltják ki egymást. Ugyanakkora erő a könnyebb testet nagyobb gyorsulásra készteti, ezért a könnyebb korcsolyázó gyorsabban gurul el. Közben a lendületek (tömeg · sebesség) összege nem változik: a rendszer együtt nem indul el sehova.</p>
+        <ul class="ex">
+          <li>A rakéta a kiáramló gázt hátrafelé löki, a gáz előre löki a rakétát.</li>
+          <li>Úszáskor a vizet hátrafelé tolod, a víz előre tol téged.</li>
+          <li>Ugráskor a talajt lefelé nyomod, a talaj felfelé lök.</li>
+        </ul>
+      </div>
+      <div class="lab rv" role="group" aria-label="Kísérlet: két korcsolyázó">
+        <div class="lab-head"><span class="tag">Kísérlet</span><span class="lab-title">Két korcsolyázó</span></div>
+        <p class="lab-how">A két korcsolyázó 0,4 másodpercig tolja egymást, aztán súrlódás nélkül gurulnak tovább. Változtasd a tömegüket, és figyeld meg, ki gyorsul jobban. A tömeg átállítása visszaállítja a jelenetet.</p>
+        <canvas id="c3" role="img" aria-label="Két korcsolyázó eltaszítja egymást a jégen. A könnyebb gyorsabban gurul el."></canvas>
+        <div class="legend"><span class="lg-f"><i></i>B-re ható erő</span><span class="lg-r"><i></i>A-ra ható erő</span><span class="lg-v"><i></i>sebesség</span></div>
+        <div class="ctrls">
+          <div class="ctrl">
+            <label for="mA">A tömege <output id="mAo" for="mA">50 kg</output></label>
+            <input type="range" id="mA" min="40" max="100" step="5" value="50">
+          </div>
+          <div class="ctrl">
+            <label for="mB">B tömege <output id="mBo" for="mB">80 kg</output></label>
+            <input type="range" id="mB" min="40" max="100" step="5" value="80">
+          </div>
+        </div>
+        <div class="btns">
+          <button class="btn" id="go3" type="button">Taszítás</button>
+          <button class="btn ghost" id="rs3" type="button">Visszaállít</button>
+          <label class="chk" for="slow3"><input type="checkbox" id="slow3"> Lassítva (negyed sebesség)</label>
+        </div>
+        <div class="read">
+          <div class="tile"><span>A gyorsulása</span><b id="aA">−3,6 m/s²</b></div>
+          <div class="tile"><span>B gyorsulása</span><b id="aB">2,3 m/s²</b></div>
+          <div class="tile"><span>A sebessége</span><b id="vA">0,0 m/s</b></div>
+          <div class="tile"><span>B sebessége</span><b id="vB">0,0 m/s</b></div>
+          <div class="tile"><span>Lendületek összege</span><b id="pS">0,0 kg·m/s</b></div>
+        </div>
+        <p class="note">A gyorsulás a 0,4 s-os taszításra vonatkozik, a mínusz előjel balra mutat. Az erő mindkét irányban 180 N.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="osszefoglalo">
+    <div class="wrap">
+      <h2 class="rv">A három törvény egy pillantásra</h2>
+      <div class="tbl rv">
+        <table>
+          <thead><tr><th></th><th>Törvény</th><th>Röviden</th><th>Képlet</th></tr></thead>
+          <tbody>
+            <tr><td class="n">I</td><td class="t">Tehetetlenség</td><td>Eredő erő nélkül a mozgásállapot nem változik.</td><td><code>ΣF = 0 → v = állandó</code></td></tr>
+            <tr><td class="n">II</td><td class="t">Dinamika alaptörvénye</td><td>Az eredő erő gyorsulást okoz, a tömeg ellenáll ennek.</td><td><code>ΣF = m · a</code></td></tr>
+            <tr><td class="n">III</td><td class="t">Hatás–ellenhatás</td><td>Az erők párban lépnek fel, két különböző testen.</td><td><code>F<sub>AB</sub> = −F<sub>BA</sub></code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="teszt">
+    <div class="wrap">
+      <h2 class="rv">Melyik törvény működik?</h2>
+      <p class="sub rv">Válaszd ki, melyik törvény magyarázza az adott helyzetet.</p>
+      <div class="quiz rv">
+        <div class="q" data-answer="1" data-why="A busz lassul, az utasok teste viszont az eredeti sebességével halad tovább. Ez a tehetetlenség.">
+          <p class="qt">Hirtelen fékez a busz, és az utasok előre dőlnek.</p>
+          <div class="opts"><button class="opt" type="button" data-v="1">I. Tehetetlenség</button><button class="opt" type="button" data-v="2">II. F = m·a</button><button class="opt" type="button" data-v="3">III. Hatás–ellenhatás</button></div>
+          <p class="fb" hidden></p>
+        </div>
+        <div class="q" data-answer="3" data-why="A rakéta lefelé löki a gázt, a gáz ugyanakkora erővel felfelé löki a rakétát. Az erőpár két testen hat.">
+          <p class="qt">A rakéta felszáll, miközben égési gázt lövell lefelé.</p>
+          <div class="opts"><button class="opt" type="button" data-v="1">I. Tehetetlenség</button><button class="opt" type="button" data-v="2">II. F = m·a</button><button class="opt" type="button" data-v="3">III. Hatás–ellenhatás</button></div>
+          <p class="fb" hidden></p>
+        </div>
+        <div class="q" data-answer="2" data-why="Ugyanaz az erő nagyobb tömegnél kisebb gyorsulást ad: a = F ÷ m.">
+          <p class="qt">Ugyanakkora erővel tolva a teli bevásárlókocsi lassabban gyorsul, mint az üres.</p>
+          <div class="opts"><button class="opt" type="button" data-v="1">I. Tehetetlenség</button><button class="opt" type="button" data-v="2">II. F = m·a</button><button class="opt" type="button" data-v="3">III. Hatás–ellenhatás</button></div>
+          <p class="fb" hidden></p>
+        </div>
+        <div class="q" data-answer="1" data-why="Az űrben nincs súrlódás, nincs eredő erő, ezért a szonda sebessége nem változik.">
+          <p class="qt">Egy kikapcsolt hajtóművű űrszonda ugyanazzal a sebességgel halad tovább.</p>
+          <div class="opts"><button class="opt" type="button" data-v="1">I. Tehetetlenség</button><button class="opt" type="button" data-v="2">II. F = m·a</button><button class="opt" type="button" data-v="3">III. Hatás–ellenhatás</button></div>
+          <p class="fb" hidden></p>
+        </div>
+      </div>
+      <div class="score-row">
+        <p class="score" id="score">Eredmény: 0 / 4</p>
+        <button class="btn ghost" id="qreset" type="button">Újrakezd</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Forrás: Isaac Newton, Philosophiae Naturalis Principia Mathematica, 1687. A kísérletek egyszerűsített modellek: súrlódás és közegellenállás csak ott van, ahol jelezzük.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var reduce = false;
+  try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  var root = document.documentElement;
+  var TAU = Math.PI * 2;
+  var MONO = '"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace';
+
+  /* ---------- segédfüggvények ---------- */
+  function fmt(n, d) {
+    if (d === undefined) d = 1;
+    var s = n.toFixed(d);
+    if (/^-0(\.0+)?$/.test(s)) s = s.slice(1);
+    return s.replace('-', '−').replace('.', ',');
+  }
+  function setText(el, s) { if (el.textContent !== s) el.textContent = s; }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  var C = null;
+  function colors() {
+    if (C) return C;
+    var s = getComputedStyle(root);
+    var g = function (n) { return s.getPropertyValue(n).trim() || '#888'; };
+    C = { ink: g('--ink'), muted: g('--muted'), line: g('--line'), surface: g('--surface'), canvas: g('--canvas'),
+          accent: g('--accent'), force: g('--force'), react: g('--react') };
+    return C;
+  }
+  function resetColors() { C = null; }
+  try {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', resetColors); else if (mq.addListener) mq.addListener(resetColors);
+  } catch (e) {}
+  try { new MutationObserver(resetColors).observe(root, { attributes: true, attributeFilter: ['data-theme'] }); } catch (e) {}
+
+  function label(ctx, text, x, y, color, align, size, weight) {
+    ctx.font = (weight || 400) + ' ' + (size || 12) + 'px ' + MONO;
+    ctx.fillStyle = color; ctx.textAlign = align || 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(text, x, y);
+  }
+  function arrow(ctx, x1, y1, x2, y2, color, lw) {
+    var dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+    if (len < 3) return;
+    var ux = dx / len, uy = dy / len, hs = Math.min(11, len * 0.6);
+    ctx.save();
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw || 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - ux * hs * 0.6, y2 - uy * hs * 0.6); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - ux * hs - uy * hs * 0.55, y2 - uy * hs + ux * hs * 0.55);
+    ctx.lineTo(x2 - ux * hs + uy * hs * 0.55, y2 - uy * hs - ux * hs * 0.55);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function rr(ctx, x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  function mk(id, state) {
+    var canvas = $(id), ctx = canvas.getContext('2d');
+    var o = { canvas: canvas, ctx: ctx, w: 300, h: 200, vis: false, seen: false };
+    function resize() {
+      var r = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      o.w = Math.max(160, Math.round(r.width));
+      o.h = Math.max(100, Math.round(r.height));
+      canvas.width = Math.round(o.w * dpr);
+      canvas.height = Math.round(o.h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (o.draw) o.draw();
+    }
+    Object.assign(o, state || {});
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
+    window.addEventListener('resize', resize);
+    resize();
+    return o;
+  }
+
+  var sims = [];
+  function register(s) {
+    sims.push(s);
+    s.draw();
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) {
+        var v = es[0].isIntersecting;
+        if (v && !s.seen) { s.seen = true; if (s.onVisible) s.onVisible(); }
+        s.vis = v;
+      }, { rootMargin: '60px' }).observe(s.canvas);
+    } else { s.vis = true; if (s.onVisible) s.onVisible(); }
+  }
+  var last = performance.now();
+  function frame(now) {
+    var dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    for (var i = 0; i < sims.length; i++) {
+      var s = sims[i];
+      if (s.vis) { if (s.step) s.step(dt); s.draw(); }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- Newton-bölcső ---------- */
+  var cr = mk('cradle', { t: 0 });
+  cr.step = function (dt) { cr.t += dt; };
+  cr.draw = function () {
+    var ctx = cr.ctx, w = cr.w, h = cr.h, c = colors();
+    ctx.clearRect(0, 0, w, h);
+    var n = 5;
+    var A = w < 460 ? 0.45 : 0.62;
+    var r = Math.max(9, Math.min(26, w / 16));
+    var maxOff = w / 2 - 4 * r - r - 6;
+    var L = Math.max(70, Math.min(h * 0.58, 170, maxOff / Math.sin(A)));
+    var cx = w / 2, top = Math.round(h * 0.14);
+    var span = n * 2 * r;
+    var base = top + L + r + 20;
+    // tartó rúd és talaj
+    ctx.strokeStyle = c.muted; ctx.lineCap = 'round'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(cx - span / 2 - 6, top); ctx.lineTo(cx + span / 2 + 6, top); ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx - w * 0.42, base); ctx.lineTo(cx + w * 0.42, base); ctx.stroke();
+    var T = 1.9, u = reduce ? 0 : ((cr.t / T) % 1);
+    var thL = 0, thR = 0;
+    if (u < 0.25) thL = -A * Math.cos(TAU * u);
+    else if (u < 0.5) thR = A * Math.sin(TAU * (u - 0.25));
+    else if (u < 0.75) thR = A * Math.cos(TAU * (u - 0.5));
+    else thL = -A * Math.sin(TAU * (u - 0.75));
+    for (var i = 0; i < n; i++) {
+      var px = cx + (i - (n - 1) / 2) * 2 * r;
+      var th = i === 0 ? thL : (i === n - 1 ? thR : 0);
+      var bx = px + L * Math.sin(th), by = top + L * Math.cos(th);
+      ctx.strokeStyle = c.muted; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(bx, by); ctx.stroke();
+      var moving = Math.abs(th) > 0.001;
+      ctx.fillStyle = moving ? c.accent : c.surface;
+      ctx.strokeStyle = c.ink; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(bx, by, r, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = c.canvas; ctx.globalAlpha = 0.7; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(bx, by, r * 0.62, Math.PI * 1.1, Math.PI * 1.55); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  };
+  register(cr);
+
+  /* ---------- I. korong a jégpályán ---------- */
+  var G = 9.81, TL = 20;
+  var d1 = mk('c1', { x: 4, v: reduce ? 0 : 4, mu: 0, acc: 0, time: 0, marks: [] });
+  d1.step = function (dt) {
+    if (d1.v !== 0) {
+      var dv = d1.mu * G * dt;
+      if (Math.abs(d1.v) <= dv) d1.v = 0; else d1.v -= Math.sign(d1.v) * dv;
+    }
+    d1.x += d1.v * dt;
+    d1.x = ((d1.x % TL) + TL) % TL;
+    d1.time += dt; d1.acc += dt;
+    while (d1.acc >= 0.25) {
+      d1.acc -= 0.25;
+      if (Math.abs(d1.v) > 0.01) d1.marks.push({ x: d1.x, t: d1.time });
+    }
+    if (d1.marks.length && d1.time - d1.marks[0].t > 6) {
+      d1.marks = d1.marks.filter(function (m) { return d1.time - m.t < 6; });
+    }
+  };
+  d1.draw = function () {
+    var ctx = d1.ctx, w = d1.w, h = d1.h, c = colors();
+    ctx.clearRect(0, 0, w, h);
+    var pad = 28, sc = (w - 2 * pad) / TL, gy = Math.round(h * 0.5), py = gy - 15;
+    var X = function (m) { return pad + m * sc; };
+    ctx.strokeStyle = c.ink; ctx.lineWidth = 2; ctx.lineCap = 'butt';
+    ctx.beginPath(); ctx.moveTo(pad - 12, gy); ctx.lineTo(w - pad + 12, gy); ctx.stroke();
+    if (d1.mu > 0) {
+      var gap = 30 - (d1.mu / 0.3) * 22;
+      ctx.strokeStyle = c.muted; ctx.lineWidth = 1.5; ctx.beginPath();
+      for (var hx = pad - 6; hx < w - pad + 12; hx += gap) { ctx.moveTo(hx, gy + 2); ctx.lineTo(hx - 6, gy + 10); }
+      ctx.stroke();
+    }
+    ctx.strokeStyle = c.muted; ctx.lineWidth = 1; ctx.beginPath();
+    for (var m = 0; m <= TL; m++) { ctx.moveTo(X(m), gy + 16); ctx.lineTo(X(m), gy + (m % 5 === 0 ? 27 : 21)); }
+    ctx.stroke();
+    for (var k = 0; k <= TL; k += 5) label(ctx, k + ' m', X(k), gy + 42, c.muted, 'center', 11);
+    // stroboszkóp
+    var sy = gy + 72;
+    ctx.fillStyle = c.accent;
+    for (var i = 0; i < d1.marks.length; i++) {
+      var mrk = d1.marks[i];
+      ctx.globalAlpha = clamp(1 - (d1.time - mrk.t) / 6, 0.08, 1);
+      ctx.beginPath(); ctx.arc(X(mrk.x), sy, 3.5, 0, TAU); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    label(ctx, 'stroboszkóp: egy pont 0,25 s', pad - 12, sy + 24, c.muted, 'left', 11);
+    // korong
+    ctx.save();
+    ctx.beginPath(); ctx.rect(pad - 14, 0, w - 2 * pad + 28, h); ctx.clip();
+    var s = Math.sign(d1.v), offs = [-TL, 0, TL];
+    for (var j = 0; j < 3; j++) {
+      var px = X(d1.x + offs[j]);
+      if (px < pad - 40 || px > w - pad + 40) continue;
+      if (d1.mu > 0 && s !== 0) arrow(ctx, px, py, px - s * (22 + d1.mu * G * 12), py, c.force, 3.5);
+      ctx.fillStyle = c.ink; ctx.beginPath(); ctx.arc(px, py, 14, 0, TAU); ctx.fill();
+      ctx.strokeStyle = c.canvas; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, 7, 0, TAU); ctx.stroke();
+      if (s !== 0) arrow(ctx, px, py - 30, px + d1.v * 9, py - 30, c.accent, 3.5);
+    }
+    ctx.restore();
+    label(ctx, 'v = ' + fmt(d1.v) + ' m/s', clamp(X(d1.x), pad + 50, w - pad - 50), py - 44, c.accent, 'center', 12, 500);
+    // kijelzők
+    setText($('v1'), fmt(d1.v) + ' m/s');
+    setText($('a1'), fmt(d1.mu * G) + ' m/s²');
+    setText($('s1'), d1.v === 0 ? 'nyugalom' : (d1.mu > 0 ? 'lassul' : 'egyenletes mozgás'));
+    var cap;
+    if (d1.mu === 0 && d1.v === 0) cap = 'Nyugalomban marad, amíg meg nem lököd: eredő erő nélkül a mozgásállapot nem változik.';
+    else if (d1.mu === 0) cap = 'Nincs eredő erő, ezért a sebesség állandó: a korong egyenlő idő alatt egyenlő utat tesz meg, a pontok egyenletesen követik egymást.';
+    else if (d1.v !== 0) cap = 'A súrlódás hátrafelé ható erő (F = μ·m·g), ezért a korong lassul. A pontok egyre közelebb kerülnek egymáshoz.';
+    else cap = 'A korong megállt, de nem magától: a súrlódási erő állította meg.';
+    setText($('cap1'), cap);
+  };
+  $('mu1').addEventListener('input', function () {
+    d1.mu = (+$('mu1').value) / 100;
+    $('mu1o').textContent = 'μ = ' + d1.mu.toFixed(2).replace('.', ',');
+  });
+  $('pushR').addEventListener('click', function () { d1.v = clamp(d1.v + 5, -12, 12); });
+  $('pushL').addEventListener('click', function () { d1.v = clamp(d1.v - 5, -12, 12); });
+  $('grab').addEventListener('click', function () { d1.v = 0; });
+  d1.mu = (+$('mu1').value) / 100;
+  $('mu1o').textContent = 'μ = ' + d1.mu.toFixed(2).replace('.', ',');
+  register(d1);
+
+  /* ---------- II. F = m·a ---------- */
+  var TMAX = 8;
+  var d2 = mk('c2', { running: false, t: 0, x: 0, v: 0, acc: 0, pts: [], F: 8, m: 4, started: false });
+  var g2 = mk('g2', {});
+  function readSliders2() {
+    d2.F = +$('F2').value; d2.m = +$('m2').value;
+    $('F2o').textContent = d2.F + ' N';
+    $('m2o').textContent = d2.m + ' kg';
+  }
+  d2.step = function (dt) {
+    if (!d2.running) return;
+    dt = Math.min(dt, TMAX - d2.t);
+    var a = d2.F / d2.m;
+    d2.v += a * dt; d2.x += d2.v * dt; d2.t += dt; d2.acc += dt;
+    while (d2.acc >= 0.05) { d2.acc -= 0.05; d2.pts.push([d2.t, d2.v]); }
+    if (d2.t >= TMAX - 1e-9) { d2.t = TMAX; d2.running = false; $('go2').textContent = 'Indít'; }
+  };
+  d2.draw = function () {
+    var ctx = d2.ctx, w = d2.w, h = d2.h, c = colors();
+    ctx.clearRect(0, 0, w, h);
+    var sc = 30, cartX = Math.round(w * 0.42), gy = Math.round(h * 0.68);
+    ctx.strokeStyle = c.ink; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+    var xl = d2.x - cartX / sc, xr = d2.x + (w - cartX) / sc;
+    ctx.strokeStyle = c.muted; ctx.lineWidth = 1; ctx.beginPath();
+    for (var k = Math.ceil(xl); k <= Math.floor(xr); k++) {
+      var tx = cartX + (k - d2.x) * sc;
+      ctx.moveTo(tx, gy + 3); ctx.lineTo(tx, gy + (k % 5 === 0 ? 14 : 8));
+    }
+    ctx.stroke();
+    for (var q = Math.ceil(xl / 5) * 5; q <= xr; q += 5) {
+      label(ctx, (q < 0 ? '−' + Math.abs(q) : q) + ' m', cartX + (q - d2.x) * sc, gy + 30, c.muted, 'center', 11);
+    }
+    var m = d2.m, wC = 44 + m * 3, hC = 22 + m * 1.6, cy = gy - 12 - hC;
+    // erő nyila
+    if (d2.F > 0) {
+      var ax2 = cartX - wC / 2 - 4, ax1 = ax2 - d2.F * 5, ay = cy + hC / 2;
+      arrow(ctx, ax1, ay, ax2, ay, c.force, 4);
+      label(ctx, 'F = ' + d2.F + ' N', Math.max(6, ax1), ay - 12, c.force, 'left', 12, 500);
+    }
+    // kocsi
+    ctx.fillStyle = c.surface; ctx.strokeStyle = c.ink; ctx.lineWidth = 2.5;
+    rr(ctx, cartX - wC / 2, cy, wC, hC, 6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = c.ink;
+    ctx.beginPath(); ctx.arc(cartX - wC / 2 + wC * 0.22, gy - 6, 6, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(cartX + wC / 2 - wC * 0.22, gy - 6, 6, 0, TAU); ctx.fill();
+    label(ctx, m + ' kg', cartX, cy + hC / 2 + 4, c.ink, 'center', 12, 500);
+    // sebesség nyila
+    if (d2.v > 0.05) {
+      var vy = cy - 20, vl = Math.min(d2.v * 2, w - cartX - 36);
+      arrow(ctx, cartX, vy, cartX + vl, vy, c.accent, 3.5);
+      label(ctx, 'v = ' + fmt(d2.v) + ' m/s', cartX, vy - 10, c.accent, 'left', 12, 500);
+    }
+    setText($('a2'), fmt(d2.F / d2.m) + ' m/s²');
+    setText($('v2'), fmt(d2.v) + ' m/s');
+    setText($('x2'), fmt(d2.x) + ' m');
+    setText($('t2'), fmt(d2.t) + ' s');
+  };
+  g2.draw = function () {
+    var ctx = g2.ctx, w = g2.w, h = g2.h, c = colors();
+    ctx.clearRect(0, 0, w, h);
+    var ml = 46, mr = 14, mt = 24, mb = 28, pw = w - ml - mr, ph = h - mt - mb;
+    var a = d2.F / d2.m, vmax = a * TMAX, i;
+    for (i = 0; i < d2.pts.length; i++) vmax = Math.max(vmax, d2.pts[i][1]);
+    var steps = [10, 20, 40, 80, 100], top = vmax;
+    for (i = 0; i < steps.length; i++) { if (steps[i] >= vmax - 1e-9) { top = steps[i]; break; } }
+    var X = function (t) { return ml + t / TMAX * pw; };
+    var Y = function (v) { return mt + ph - (v / top) * ph; };
+    ctx.strokeStyle = c.line; ctx.lineWidth = 1; ctx.beginPath();
+    for (i = 0; i <= 2; i++) { var yy = Y(top * i / 2); ctx.moveTo(ml, yy); ctx.lineTo(w - mr, yy); }
+    for (i = 0; i <= 4; i++) { var xx = X(i * 2); ctx.moveTo(xx, mt); ctx.lineTo(xx, mt + ph); }
+    ctx.stroke();
+    for (i = 0; i <= 2; i++) label(ctx, String(top * i / 2), ml - 8, Y(top * i / 2) + 4, c.muted, 'right', 11);
+    for (i = 0; i <= 4; i++) label(ctx, String(i * 2), X(i * 2), mt + ph + 18, c.muted, 'center', 11);
+    label(ctx, 'v (m/s)', ml, 14, c.muted, 'left', 11);
+    label(ctx, 't (s)', w - mr, h - 4, c.muted, 'right', 11);
+    // várható egyenes
+    ctx.save();
+    ctx.setLineDash([5, 5]); ctx.strokeStyle = c.muted; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(TMAX), Y(a * TMAX)); ctx.stroke();
+    ctx.restore();
+    // mért görbe
+    var pts = d2.pts.slice();
+    if (d2.t > 0) pts.push([d2.t, d2.v]);
+    if (pts.length > 1) {
+      ctx.strokeStyle = c.accent; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(X(0), Y(0));
+      for (i = 0; i < pts.length; i++) ctx.lineTo(X(pts[i][0]), Y(pts[i][1]));
+      ctx.stroke();
+      var lp = pts[pts.length - 1];
+      ctx.fillStyle = c.accent; ctx.beginPath(); ctx.arc(X(lp[0]), Y(lp[1]), 4.5, 0, TAU); ctx.fill();
+    }
+  };
+  g2.step = null;
+  function reset2() {
+    d2.running = false; d2.t = 0; d2.x = 0; d2.v = 0; d2.acc = 0; d2.pts = [];
+    $('go2').textContent = 'Indít';
+    d2.draw(); g2.draw();
+  }
+  $('F2').addEventListener('input', function () { readSliders2(); d2.draw(); g2.draw(); });
+  $('m2').addEventListener('input', function () { readSliders2(); d2.draw(); g2.draw(); });
+  $('go2').addEventListener('click', function () {
+    d2.started = true;
+    if (d2.t >= TMAX) reset2();
+    d2.running = !d2.running;
+    $('go2').textContent = d2.running ? 'Szünet' : 'Indít';
+  });
+  $('rs2').addEventListener('click', function () { d2.started = true; reset2(); });
+  d2.onVisible = function () {
+    if (!reduce && !d2.started) { d2.started = true; d2.running = true; $('go2').textContent = 'Szünet'; }
+  };
+  readSliders2();
+  register(d2);
+  register(g2);
+
+  /* ---------- III. hatás és ellenhatás ---------- */
+  var FP = 180, TP = 0.4, XA0 = -0.5, XB0 = 0.5;
+  var d3 = mk('c3', { xA: XA0, xB: XB0, vA: 0, vB: 0, pushing: false, pt: 0, half: 3.5, fl: 0, used: false, mA: 50, mB: 80 });
+  function rw(m) { return 0.14 + (m - 40) / 60 * 0.1; }
+  function readSliders3() {
+    d3.mA = +$('mA').value; d3.mB = +$('mB').value;
+    $('mAo').textContent = d3.mA + ' kg';
+    $('mBo').textContent = d3.mB + ' kg';
+    setText($('aA'), fmt(-FP / d3.mA) + ' m/s²');
+    setText($('aB'), fmt(FP / d3.mB) + ' m/s²');
+  }
+  function reset3() {
+    d3.xA = XA0; d3.xB = XB0; d3.vA = 0; d3.vB = 0; d3.pushing = false; d3.pt = 0; d3.half = 3.5; d3.fl = 0;
+    d3.draw();
+  }
+  function push3() {
+    reset3();
+    d3.used = true; d3.pushing = true; d3.pt = 0; d3.fl = 1.2;
+  }
+  d3.step = function (dt) {
+    var rdt = dt;
+    dt *= $('slow3').checked ? 0.25 : 1;
+    if (d3.pushing) {
+      var dtp = Math.min(dt, TP - d3.pt);
+      d3.vA -= FP / d3.mA * dtp;
+      d3.vB += FP / d3.mB * dtp;
+      d3.pt += dt;
+      if (d3.pt >= TP) d3.pushing = false;
+    }
+    if (d3.fl > 0) d3.fl = Math.max(0, d3.fl - rdt);
+    d3.xA += d3.vA * dt; d3.xB += d3.vB * dt;
+    var target = Math.max(3.5, Math.max(Math.abs(d3.xA), Math.abs(d3.xB)) * 1.25 + 0.8);
+    if (target > d3.half) d3.half += (target - d3.half) * (1 - Math.exp(-rdt * 5));
+  };
+  d3.draw = function () {
+    var ctx = d3.ctx, w = d3.w, h = d3.h, c = colors();
+    ctx.clearRect(0, 0, w, h);
+    var sc = w / (2 * d3.half), gy = Math.round(h * 0.62), cx0 = w / 2;
+    var X = function (m) { return cx0 + m * sc; };
+    ctx.strokeStyle = c.ink; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+    // skála
+    var stepsM = [0.5, 1, 2, 5, 10, 20], st = 20, i;
+    for (i = 0; i < stepsM.length; i++) { if (stepsM[i] * sc >= 56) { st = stepsM[i]; break; } }
+    ctx.strokeStyle = c.muted; ctx.lineWidth = 1; ctx.beginPath();
+    var k0 = Math.ceil(-d3.half / st), k1 = Math.floor(d3.half / st);
+    for (i = k0; i <= k1; i++) { ctx.moveTo(X(i * st), gy + 3); ctx.lineTo(X(i * st), gy + 12); }
+    ctx.stroke();
+    for (i = k0; i <= k1; i++) label(ctx, fmt(i * st, st < 1 ? 1 : 0) + ' m', X(i * st), gy + 28, c.muted, 'center', 11);
+    // tömegközéppont
+    var cm = (d3.mA * XA0 + d3.mB * XB0) / (d3.mA + d3.mB), cmx = X(cm);
+    ctx.fillStyle = c.ink; ctx.beginPath();
+    ctx.moveTo(cmx, gy - 6); ctx.lineTo(cmx + 6, gy); ctx.lineTo(cmx, gy + 6); ctx.lineTo(cmx - 6, gy); ctx.closePath(); ctx.fill();
+    label(ctx, 'tömegközéppont (nem mozdul)', cmx, gy + 52, c.muted, 'center', 11);
+    // alakok
+    var rA = Math.max(9, rw(d3.mA) * sc), rB = Math.max(9, rw(d3.mB) * sc);
+    var xa = X(d3.xA), xb = X(d3.xB), cyA = gy - rA, cyB = gy - rB;
+    if (d3.pushing || (d3.xB - d3.xA) <= 1.0001) {
+      ctx.strokeStyle = c.ink; ctx.lineWidth = 4; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(xa + rA, cyA); ctx.lineTo(xb - rB, cyB); ctx.stroke();
+    }
+    var figs = [[xa, cyA, rA, 'A'], [xb, cyB, rB, 'B']];
+    for (i = 0; i < 2; i++) {
+      var f = figs[i];
+      ctx.fillStyle = c.surface; ctx.strokeStyle = c.ink; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(f[0], f[1], f[2], 0, TAU); ctx.fill(); ctx.stroke();
+      label(ctx, f[3], f[0], f[1] + Math.min(6, f[2] * 0.35), c.ink, 'center', Math.round(Math.min(18, f[2] * 0.9)), 500);
+    }
+    // sebességnyilak
+    var vA = d3.vA, vB = d3.vB;
+    if (Math.abs(vA) > 0.01) arrow(ctx, xa, cyA - rA - 12, xa + clamp(vA * 45, -150, 150), cyA - rA - 12, c.accent, 3.5);
+    if (Math.abs(vB) > 0.01) arrow(ctx, xb, cyB - rB - 12, xb + clamp(vB * 45, -150, 150), cyB - rB - 12, c.accent, 3.5);
+    // erőnyilak
+    if (d3.pushing || d3.fl > 0) {
+      ctx.globalAlpha = d3.pushing ? 1 : clamp(d3.fl / 0.5, 0, 1);
+      var yA = cyA - rA - 34, yB = cyB - rB - 34;
+      arrow(ctx, xa, yA, xa - 64, yA, c.react, 4.5);
+      arrow(ctx, xb, yB, xb + 64, yB, c.force, 4.5);
+      label(ctx, FP + ' N', xa - 32, yA - 10, c.react, 'center', 12, 500);
+      label(ctx, FP + ' N', xb + 32, yB - 10, c.force, 'center', 12, 500);
+      ctx.globalAlpha = 1;
+    }
+    setText($('vA'), fmt(vA) + ' m/s');
+    setText($('vB'), fmt(vB) + ' m/s');
+    setText($('pS'), fmt(d3.mA * vA + d3.mB * vB) + ' kg·m/s');
+  };
+  $('mA').addEventListener('input', function () { readSliders3(); d3.used = true; reset3(); });
+  $('mB').addEventListener('input', function () { readSliders3(); d3.used = true; reset3(); });
+  $('go3').addEventListener('click', push3);
+  $('rs3').addEventListener('click', function () { d3.used = true; reset3(); });
+  d3.onVisible = function () {
+    if (!reduce) setTimeout(function () { if (!d3.used) push3(); }, 700);
+  };
+  readSliders3();
+  register(d3);
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { for (var i = 0; i < sims.length; i++) sims[i].draw(); });
+  }
+  requestAnimationFrame(frame);
+
+  /* ---------- kvíz ---------- */
+  var qs = Array.prototype.slice.call(document.querySelectorAll('.q'));
+  var score = 0, done = 0;
+  function updateScore() {
+    var t = 'Eredmény: ' + score + ' / ' + qs.length;
+    if (done === qs.length) t += score === qs.length ? ' – hibátlan.' : ' – nézd újra a magyarázatokat.';
+    $('score').textContent = t;
+  }
+  qs.forEach(function (q) {
+    var opts = Array.prototype.slice.call(q.querySelectorAll('.opt'));
+    opts.forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (q.getAttribute('data-done')) return;
+        q.setAttribute('data-done', '1'); done++;
+        var ok = b.getAttribute('data-v') === q.getAttribute('data-answer');
+        if (ok) score++;
+        b.classList.add(ok ? 'ok' : 'bad');
+        if (!ok) q.querySelector('.opt[data-v="' + q.getAttribute('data-answer') + '"]').classList.add('ok');
+        var fb = q.querySelector('.fb');
+        fb.textContent = (ok ? 'Helyes. ' : 'Nem egészen. ') + q.getAttribute('data-why');
+        fb.hidden = false;
+        opts.forEach(function (x) { x.disabled = true; });
+        updateScore();
+      });
+    });
+  });
+  $('qreset').addEventListener('click', function () {
+    score = 0; done = 0;
+    qs.forEach(function (q) {
+      q.removeAttribute('data-done');
+      q.querySelector('.fb').hidden = true;
+      Array.prototype.forEach.call(q.querySelectorAll('.opt'), function (x) { x.disabled = false; x.classList.remove('ok', 'bad'); });
+    });
+    updateScore();
+  });
+
+  /* ---------- navigáció és belépő mozgás ---------- */
+  if ('IntersectionObserver' in window) {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.links a'));
+    var secs = ['elso', 'masodik', 'harmadik', 'osszefoglalo', 'teszt'];
+    var navIO = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.setAttribute('aria-current', a.getAttribute('href') === '#' + e.target.id ? 'true' : 'false'); });
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    secs.forEach(function (id) { var el = $(id); if (el) navIO.observe(el); });
+    if (!reduce) {
+      root.classList.add('js-rv');
+      var rvIO = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); rvIO.unobserve(e.target); } });
+      }, { rootMargin: '0px 0px -8% 0px' });
+      Array.prototype.forEach.call(document.querySelectorAll('.rv'), function (el) { rvIO.observe(el); });
+    }
+  }
+})();
+</script>
+
+</body></html>
